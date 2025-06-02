@@ -1,174 +1,193 @@
 import pgzrun
-from pgzero.actor import Actor
-from pgzero import keyboard
 from random import randint
-from pgzero import clock
 
-BREDD = 800
-HOJD = 600
-MITT_X = BREDD / 2
-MITT_Y = HOJD / 2
+# Skärmstorlek
+WIDTH = 800
+HEIGHT = 600
+CENTER_X = WIDTH / 2
+CENTER_Y = HEIGHT / 2
 
-steglista = []
-visa_lista = []
+# Speldata
+step_list = []
+show_list = []
 
-summa = 0
-aktuellt_steg = 0
-antal = 4
-danslangd = 4
+score = 0
+current_step = 0
+count = 4
+dance_length = 4
 
-ropa_dansa = False
-visa_nedrakning = True
-steg_klara = False
-spelet_slut = False
+say_dance = False
+show_countdown = True
+steps_done = False
+game_over = False
 
-dansare = Actor("dancer-start")
-dansare.pos = MITT_X + 5, MITT_Y - 40
+# Skapa aktörer
+dancer = Actor("dancer-start")
+dancer.pos = CENTER_X + 5, CENTER_Y - 40
 
-upp = Actor("up")
-upp.pos = MITT_X, MITT_Y + 110
+up = Actor("up")
+up.pos = CENTER_X, CENTER_Y + 110
 
-hoger = Actor("right")
-hoger.pos = MITT_X + 60, MITT_Y + 170
+right = Actor("right")
+right.pos = CENTER_X + 60, CENTER_Y + 170
 
-ner = Actor("down")
-ner.pos = MITT_X, MITT_Y + 230
+down = Actor("down")
+down.pos = CENTER_X, CENTER_Y + 230
 
-vanster = Actor("left")
-vanster.pos = MITT_X - 60, MITT_Y + 170
+left = Actor("left")
+left.pos = CENTER_X - 60, CENTER_Y + 170
 
 def draw():
-    global spelet_slut, summa, ropa_dansa   
-    global antal,visa_nedrakning
-    if not spelet_slut:
-        screen.clear()
-        screen.blit("stage", (0, 0))
-        dansare.draw()
-        upp.draw()
-        ner.draw()
-        hoger.draw()
-        vanster.draw()
-        screen.draw.text("Summa:" + 
-                         str(summa), color="black",
-                         topleft=(10, 10))
-        if ropa_dansa:
+    screen.clear()
+    screen.blit("stage", (0, 0))
+    screen.draw.text("Poäng: " + str(score), color="black", topleft=(10, 10))
+
+    if game_over:
+        screen.draw.text("SPELET ÄR SLUT!", color="black",
+                         topleft=(CENTER_X - 130, 220), fontsize=60)
+        screen.draw.text("Tryck [MELLANSLAG] för att spela igen", color="black",
+                         topleft=(CENTER_X - 190, 300), fontsize=40)
+    else:
+        dancer.draw()
+        up.draw()
+        down.draw()
+        right.draw()
+        left.draw()
+
+        if say_dance:
             screen.draw.text("Dansa!", color="black",
-                             topleft=(MITT_X - 65, 150), fontsize=60)
-        if visa_nedrakning:
-            screen.draw.text(str(antal), color="black",
-                             topleft=(MITT_X - 8, 150), fontsize=60) 
-    else:
-        screen.clear()
-        screen.blit("stage", (0, 0))  
-        screen.draw.text("Summa:" + 
-                        str(summa), color="black",
-                        topleft=(10, 10)) 
-        screen.draw.text("SLUTSPELAT!", color="black",
-                        topleft=(MITT_X - 130, 220), fontsize=60)
-    return    
-            
+                             topleft=(CENTER_X - 65, 150), fontsize=60)
+        elif show_countdown:
+            screen.draw.text(str(count), color="black",
+                             topleft=(CENTER_X - 8, 150), fontsize=60)
 
-def dansare_tillbaka():
-    global spelet_slut
-    if not spelet_slut:
-        dansare.image = "dancer-start"
-        upp.image = "up"
-        hoger.image = "right"
-        ner.image = "down"
-        vanster.image = "left"
-    return
+def dancer_back():
+    if not game_over:
+        dancer.image = "dancer-start"
+        up.image = "up"
+        right.image = "right"
+        down.image = "down"
+        left.image = "left"
 
-
-def uppdatera_dansare(steg):
-    global spelet_slut
-    if not spelet_slut:
-        if steg == 0:
-            upp.image = "up-lit"
-            dansare.image = "dancer-up"
-            clock.schedule(dansare_tillbaka, 0.5)
-        elif steg == 1:
-            hoger.image = "right-lit"
-            dansare.image = "dancer-right"
-            clock.schedule(dansare_tillbaka, 0.5)
-        elif steg == 2:
-            ner.image = "down-lit"
-            dansare.image = "dancer-down"
-            clock.schedule(dansare_tillbaka, 0.5)
+def update_dancer(step):
+    if not game_over:
+        if step == 0:
+            up.image = "up-lit"
+            dancer.image = "dancer-up"
+        elif step == 1:
+            right.image = "right-lit"
+            dancer.image = "dancer-right"
+        elif step == 2:
+            down.image = "down-lit"
+            dancer.image = "dancer-down"
         else:
-            vanster.image = "left-lit"
-            dansare.image = "dancer-left"
-            clock.schedule     (dansare_tillbaka, 0.5)
-    return
+            left.image = "left-lit"
+            dancer.image = "dancer-left"
+        clock.schedule(dancer_back, 0.5)
 
-
-def visa_steg():
-    global steglista, visa_lista, danslangd
-    global ropa_dansa, visa_nedrakning, aktuellt_steg   
-    
-    if visa_lista:
-        detta_steg = visa_lista[0]
-        visa_lista = visa_lista[1:]
-        if detta_steg == 0:
-            uppdatera_dansare(0)
-            clock.schedule(visa_steg, 1)
-        elif detta_steg == 1:
-            uppdatera_dansare(1)
-            clock.schedule(visa_steg, 1)
-        elif detta_steg == 2:
-            uppdatera_dansare(2)
-            clock.schedule(visa_steg, 1)
-        else:
-            uppdatera_dansare(3)
-            clock.schedule(visa_steg, 1)
+def show_steps():
+    global show_list, say_dance, show_countdown
+    if show_list:
+        this_step = show_list.pop(0)
+        update_dancer(this_step)
+        clock.schedule(show_steps, 1)
     else:
-        ropa_dansa = True
-        visa_nedrakning = False
-    return    
+        say_dance = True
+        show_countdown = False
 
+def create_steps():
+    global step_list, show_list, count, say_dance, show_countdown
+    count = 4
+    step_list = []
+    show_list = []
+    say_dance = False
+    for i in range(dance_length):
+        step = randint(0, 3)
+        step_list.append(step)
+        show_list.append(step)
+    show_countdown = True
+    countdown()
 
-def skapa_steg():
-    global steglista, danslangd, antal
-    global visa_nedrakning, ropa_dansa
-    antal = 4
-    steglista = []
-    ropa_dansa = False
-    for steg in range(0, danslangd):
-        slump_steg = randint(0, 3)
-        steglista.append(slump_steg)
-        visa_lista.append(slump_steg)
-    visa_nedrakning = True
-    nedrakning()
-    return    
-
-
-def nedrakning():
-    global antal, spelet_slut, visa_nedrakning
-    if antal > 1:
-        antal = antal -1
-        clock.schedule(nedrakning, 1)
+def countdown():
+    global count, show_countdown
+    if count > 1:
+        count -= 1
+        clock.schedule(countdown, 1)
     else:
-        visa_nedrakning = False
-        visa_steg()
-    return        
+        show_countdown = False
+        show_steps()
 
-def nasta_steg():
-    pass
+def next_step():
+    global current_step, steps_done
+    if current_step < dance_length - 1:
+        current_step += 1
+    else:
+        steps_done = True
 
 def on_key_up(key):
-    global summa, spelet_slut, steglista, aktuellt_steg
-    if key == keys.UP:
-        uppdatera_dansare(0)
-    elif key == keys.RIGHT:
-        uppdatera_dansare(1)
-    elif key == keys.DOWN:
-        uppdatera_dansare(2)
-    elif key == keys.LEFT:
-        uppdatera_dansare(3)
-    return                
+    global score, current_step, game_over
+    if say_dance and not game_over:
+        if key == keys.UP:
+            update_dancer(0)
+            if step_list[current_step] == 0:
+                score += 1
+                next_step()
+            else:
+                game_over = True
+        elif key == keys.RIGHT:
+            update_dancer(1)
+            if step_list[current_step] == 1:
+                score += 1
+                next_step()
+            else:
+                game_over = True
+        elif key == keys.DOWN:
+            update_dancer(2)
+            if step_list[current_step] == 2:
+                score += 1
+                next_step()
+            else:
+                game_over = True
+        elif key == keys.LEFT:
+            update_dancer(3)
+            if step_list[current_step] == 3:
+                score += 1
+                next_step()
+            else:
+                game_over = True
 
-skapa_steg()
+def on_key_down(key):
+    if game_over and key == keys.SPACE:
+        restart_game()
+
+def restart_game():
+    global score, current_step, count, step_list, show_list
+    global say_dance, show_countdown, steps_done, game_over
+
+    score = 0
+    current_step = 0
+    count = 4
+    step_list = []
+    show_list = []
+    say_dance = False
+    show_countdown = True
+    steps_done = False
+    game_over = False
+
+    create_steps()
+    music.play("vanishing-horizon")
 
 def update():
-    pass
+    global steps_done, current_step
+    if steps_done and not game_over:
+        create_steps()
+        current_step = 0
+        steps_done = False
+    elif game_over:
+        music.stop()
+
+# Starta spelet
+create_steps()
+music.play("vanishing-horizon")
 
 pgzrun.go()

@@ -44,9 +44,9 @@ def draw():
 
     if game_over:
         screen.draw.text("SPELET ÄR SLUT!", color="black",
-                         topleft=(CENTER_X - 130, 220), fontsize=60)
+                         topleft=(CENTER_X - 170, 220), fontsize=60)
         screen.draw.text("Tryck [MELLANSLAG] för att spela igen", color="black",
-                         topleft=(CENTER_X - 190, 300), fontsize=40)
+                         topleft=(CENTER_X - 250, 300), fontsize=40)
     else:
         dancer.draw()
         up.draw()
